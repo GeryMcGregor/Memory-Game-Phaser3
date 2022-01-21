@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 import MemoryGameScene from '../src/scenes/MemoryGameScene';
+import gameOver from '../src/scenes/gameOver';
+import gameWin from '../src/scenes/gameWin';
 
 const config = {
 	type: Phaser.AUTO,
@@ -15,7 +17,7 @@ const config = {
 			gravity: { y: 0 }
 		}
 	},
-	scene: [MemoryGameScene]
+	scene: [MemoryGameScene, gameOver, gameWin]
 }
 
 export default new Phaser.Game(config)

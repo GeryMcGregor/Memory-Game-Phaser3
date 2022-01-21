@@ -28,6 +28,9 @@ export default class MemoryGameScene extends Phaser.Scene {
     this.itemsGroup = undefined;
     this.selectedBoxes = [];
     this.matchesCount = 0;
+    this.timerLabel = undefined;
+    this.countdownTimer = 40;
+    this.timedEvent = undefined;
     // this.keyboard = this.input.keyboard.addKeys('W,A,S,D');
   }
 
@@ -61,6 +64,14 @@ export default class MemoryGameScene extends Phaser.Scene {
     );
 
     this.itemsGroup = this.add.group();
+    this.timerLabel = this.add.text(this.halfWidth, this.halfHeight + 220, null);
+
+    this.timedEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.gameOver,
+      callbackScope: this,
+      loop: true,
+    });
   }
 
   update() {
@@ -71,7 +82,7 @@ export default class MemoryGameScene extends Phaser.Scene {
       // @ts-ignore
       const child = c;
 
-      if (child.getData('sorted')) {
+      if (child.getData("sorted")) {
         return;
       }
 
@@ -79,6 +90,15 @@ export default class MemoryGameScene extends Phaser.Scene {
     });
 
     this.updateActiveBox();
+
+    this.timerLabel
+      .setStyle({
+        fontSize: "24px",
+        fill: "#ffffff",
+        fontStyle: "bold",
+        align: "center",
+      })
+      .setText(this.countdownTimer);
   }
 
   createBoxes() {
@@ -152,9 +172,8 @@ export default class MemoryGameScene extends Phaser.Scene {
   }
 
   movePlayer(player) {
-
     if (!this.player.active) {
-      return
+      return;
     }
     const speed = 200;
 
@@ -175,11 +194,11 @@ export default class MemoryGameScene extends Phaser.Scene {
       this.player.anims.play("standby", true);
     }
 
-    const spaceJustPressed = Phaser.Input.Keyboard.JustUp(this.cursors.space)
+    const spaceJustPressed = Phaser.Input.Keyboard.JustUp(this.cursors.space);
     if (spaceJustPressed && this.activeBox) {
-        this.openBox(this.activeBox);
-        this.activeBox.setFrame(8);
-        this.activeBox = undefined;
+      this.openBox(this.activeBox);
+      this.activeBox.setFrame(8);
+      this.activeBox = undefined;
     }
   }
 
@@ -190,9 +209,9 @@ export default class MemoryGameScene extends Phaser.Scene {
     this.activeBox = box;
     this.activeBox.setFrame(6);
 
-    const opened = box.getData('opened')
+    const opened = box.getData("opened");
     if (opened) {
-        return
+      return;
     }
   }
 
@@ -215,139 +234,166 @@ export default class MemoryGameScene extends Phaser.Scene {
     this.activeBox = undefined;
   }
 
-  handleBearSelected(){
-    const {box, item} = this.selectedBoxes.pop()
-    item.setTint(0xff0000)
-    item.setFrame(20)
+  handleBearSelected() {
+    const { box, item } = this.selectedBoxes.pop();
+    item.setTint(0xff0000);
+    item.setFrame(20);
 
-    this.player.active = false
-    this.player.setVelocity(0, 0) 
+    this.player.active = false;
+    this.player.setVelocity(0, 0);
 
     this.time.delayedCall(3000, () => {
-      item.setTint(0xffffff)
-      box.setFrame(8) //setFrame(7) untuk box biru
-      box.setData('opened', false)
+      item.setTint(0xffffff);
+      box.setFrame(8); //setFrame(7) untuk box biru
+      box.setData("opened", false);
 
       this.tweens.add({
         targets: item,
-        y: '+=50',
+        y: "+=50",
         alpha: 0,
         scale: 0,
         duration: 300,
         onComplete: () => {
-          this.player.active = true
-        }
-      })
-    })
+          this.player.active = true;
+        },
+      });
+    });
   }
 
-  checkForMatch(){
+  checkForMatch() {
     const second = this.selectedBoxes.pop();
     const first = this.selectedBoxes.pop();
 
     if (first.item.texture !== second.item.texture) {
       this.tweens.add({
         targets: [first.item, second.item],
-        y: '+=50',
+        y: "+=50",
         alpha: 0,
         scale: 0,
         duration: 300,
         delay: 1000,
         onComplete: () => {
-          this.itemsGroup.killAndHide(first.item)
-          this.itemsGroup.killAndHide(second.item)
+          this.itemsGroup.killAndHide(first.item);
+          this.itemsGroup.killAndHide(second.item);
 
-          first.box.setData('opened', false)
-          second.box.setData('opened', false)
-        }
-      })
-      return
+          first.box.setData("opened", false);
+          second.box.setData("opened", false);
+        },
+      });
+      return;
     }
 
-    ++this.matchesCount
+    ++this.matchesCount;
 
     this.time.delayedCall(1000, () => {
-      first.box.setFrame(7) //awalnya setFrame(8)
-      second.box.setFrame(7) //awalnya setFrame(8)
+      first.box.setFrame(7); //awalnya setFrame(8)
+      second.box.setFrame(7); //awalnya setFrame(8)
 
       if (this.matchesCount >= 4) {
         this.player.active = false;
-        this.player.setVelocity(0, 0)
-      }
-    })
+        this.player.setVelocity(0, 0);
 
+        // this.add
+        //   .text(this.halfWidth, this.halfHeight + 250, "You Win !", {
+        //     // @ts-ignore
+        //     fontSize: 60,
+        //   })
+        //   .setOrigin(0.5);
+        this.countdownTimer = undefined;
+
+        this.scene.start("game-win")
+      }
+    });
   }
 
   openBox(box) {
     if (!box) {
-        return
+      return;
     }
 
-    const itemType = box.getData('itemType')
-    let item
+    const itemType = box.getData("itemType");
+    let item;
 
     switch (itemType) {
-        case 0:
-            item = this.itemsGroup.get(box.x, box.y)
-            item.setTexture('bear')
-            break;
-        
-        case 1:
-            item = this.itemsGroup.get(box.x, box.y)
-            item.setTexture('chicken')
-            break;
+      case 0:
+        item = this.itemsGroup.get(box.x, box.y);
+        item.setTexture("bear");
+        break;
 
-        case 2:
-            item = this.itemsGroup.get(box.x, box.y)
-            item.setTexture('duck')
-            break;
+      case 1:
+        item = this.itemsGroup.get(box.x, box.y);
+        item.setTexture("chicken");
+        break;
 
-        case 3:
-            item = this.itemsGroup.get(box.x, box.y)
-            item.setTexture('parrot')
-            break;    
+      case 2:
+        item = this.itemsGroup.get(box.x, box.y);
+        item.setTexture("duck");
+        break;
 
-        case 4:
-            item = this.itemsGroup.get(box.x, box.y)
-            item.setTexture('penguin')
-            break;    
+      case 3:
+        item = this.itemsGroup.get(box.x, box.y);
+        item.setTexture("parrot");
+        break;
 
-        // default:
-        //     break;
+      case 4:
+        item = this.itemsGroup.get(box.x, box.y);
+        item.setTexture("penguin");
+        break;
+
+      // default:
+      //     break;
     }
 
     if (!item) {
-        return 
+      return;
     }
-    box.setData('opened', true)
+    box.setData("opened", true);
 
-    item.setData('sorted', true)
-    item.setDepth(2000)
-    item.setActive(true)
-    item.setVisible(true)
+    item.setData("sorted", true);
+    item.setDepth(2000);
+    item.setActive(true);
+    item.setVisible(true);
 
     item.scale = 0;
     item.alpha = 0;
 
-    this.selectedBoxes.push({box, item})
+    this.selectedBoxes.push({ box, item });
 
     this.tweens.add({
       targets: item,
-      y: '-=50',
+      y: "-=50",
       alpha: 1,
       scale: 1,
       duration: 500,
       onComplete: () => {
         if (itemType === 0) {
           this.handleBearSelected();
-          return
+          return;
         }
         if (this.selectedBoxes.length < 2) {
-          return
+          return;
         }
         this.checkForMatch();
-      }
-    })
+      },
+    });
   }
 
+  gameOver() {
+    this.countdownTimer = parseInt(this.countdownTimer);
+    this.countdownTimer -= 1;
+    if (this.countdownTimer == 0) {
+      // @ts-ignore
+      this.add
+        .text(this.halfWidth, this.halfHeight + 250, "You Lose !", {
+          // @ts-ignore
+          fontSize: 60,
+        })
+        .setOrigin(0.5);
+      this.countdownTimer = undefined;
+      this.player.active = false;
+      this.player.setVelocity(0, 0);
+
+      this.scene.start("game-over");
+    }
+  }
 }
