@@ -64,7 +64,11 @@ export default class MemoryGameScene extends Phaser.Scene {
     );
 
     this.itemsGroup = this.add.group();
-    this.timerLabel = this.add.text(this.halfWidth, this.halfHeight + 220, null);
+    this.timerLabel = this.add.text(
+      this.halfWidth,
+      this.halfHeight + 220,
+      null
+    );
 
     this.timedEvent = this.time.addEvent({
       delay: 1000,
@@ -301,7 +305,7 @@ export default class MemoryGameScene extends Phaser.Scene {
         //   .setOrigin(0.5);
         this.countdownTimer = undefined;
 
-        this.scene.start("game-win")
+        this.scene.start("game-win");
       }
     });
   }
