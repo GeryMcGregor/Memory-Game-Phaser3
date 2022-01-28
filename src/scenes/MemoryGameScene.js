@@ -1,12 +1,5 @@
 import Phaser from "phaser";
 
-/*  ToDo: 
-    /* Challange hal 86
-    /* Kalo player ke atas dia ilang (mungkin ada kaitannya dengan background)
-    /* Uncomment this.handleBearSelected();
-    /* Uncomment this.checkForMatch();
-*/
-
 const level = [
   [1, 0, 3],
   [2, 4, 1],
